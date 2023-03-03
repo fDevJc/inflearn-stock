@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.jc.inflearnstock.domain.Stock;
+import com.jc.inflearnstock.facade.OptimisticLockStockFacade;
 import com.jc.inflearnstock.repository.StockRepository;
 
 @SpringBootTest
@@ -22,6 +23,8 @@ class StockServiceTest {
 	private StockService stockService;
 	@Autowired
 	private StockRepository stockRepository;
+	@Autowired
+	private OptimisticLockStockFacade stockFacade;
 
 	private Stock savedStock;
 
@@ -116,6 +119,31 @@ class StockServiceTest {
 			executorService.submit(() -> {
 				try {
 					stockService.decreaseWithPessimisticLock(savedStock.getId(), 1L);
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+		latch.await();
+
+		Stock stock = stockRepository.findById(savedStock.getId()).orElseThrow();
+
+		System.out.println("stock.getQuantity() = " + stock.getQuantity());
+		assertThat(stock.getQuantity()).isEqualTo(0L);
+	}
+
+	@Test
+	void 동시에_100개의_요청_decrease메소드_optimisticLock() throws Exception {
+		int threadCount = 100;
+		ExecutorService executorService = Executors.newFixedThreadPool(32);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+
+		for (int i = 0; i < threadCount; i++) {
+			executorService.submit(() -> {
+				try {
+					stockFacade.decrease(savedStock.getId(), 1L);
+				} catch (InterruptedException e) {
+					throw new RuntimeException(e);
 				} finally {
 					latch.countDown();
 				}

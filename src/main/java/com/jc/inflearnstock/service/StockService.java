@@ -40,11 +40,20 @@ public class StockService {
 	@Transactional
 	public void decreaseWithPessimisticLock(Long id, Long quantity) {
 		//재고 조회
-		Stock stock = stockRepository.findByIdForUpdate(id).get();
+		Stock stock = stockRepository.findByIdWithPessimisticLock(id).get();
 		//재고 감소
 		stock.decrease(quantity);
 		//저장
 		stockRepository.saveAndFlush(stock);
+	}
 
+	@Transactional
+	public void decreaseWithOptimisticLock(Long id, Long quantity) {
+		//재고 조회
+		Stock stock = stockRepository.findByIdWithOptimisticLock(id).get();
+		//재고 감소
+		stock.decrease(quantity);
+		//저장
+		stockRepository.saveAndFlush(stock);
 	}
 }

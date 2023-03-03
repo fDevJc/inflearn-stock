@@ -14,6 +14,10 @@ import com.jc.inflearnstock.domain.Stock;
 public interface StockRepository extends JpaRepository<Stock, Long> {
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
-	@Query(value = "SELECT s FROM Stock s WHERE s.id=:id")
-	Optional<Stock> findByIdForUpdate(@Param("id") Long id);
+	@Query("SELECT s FROM Stock s WHERE s.id=:id")
+	Optional<Stock> findByIdWithPessimisticLock(@Param("id") Long id);
+
+	@Lock(LockModeType.OPTIMISTIC)
+	@Query("SELECT s FROM Stock s where s.id=:id")
+	Optional<Stock> findByIdWithOptimisticLock(@Param("id") Long id);
 }
