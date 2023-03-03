@@ -16,7 +16,7 @@ public class StockService {
 	}
 
 	@Transactional
-	public synchronized void synchronizedDecrease(Long id, Long quantity) {
+	public synchronized void decreaseWithSynchronized(Long id, Long quantity) {
 		//재고 조회
 		Stock stock = stockRepository.findById(id)
 			.orElseThrow();
@@ -35,5 +35,16 @@ public class StockService {
 		stock.decrease(quantity);
 		//저장
 		stockRepository.saveAndFlush(stock);
+	}
+
+	@Transactional
+	public void decreaseWithPessimisticLock(Long id, Long quantity) {
+		//재고 조회
+		Stock stock = stockRepository.findByIdForUpdate(id).get();
+		//재고 감소
+		stock.decrease(quantity);
+		//저장
+		stockRepository.saveAndFlush(stock);
+
 	}
 }

@@ -1,5 +1,7 @@
 package com.jc.inflearnstock.service;
 
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -41,7 +43,7 @@ class StockServiceTest {
 		Stock ret = stockRepository.findById(savedStock.getId())
 			.orElseThrow();
 
-		Assertions.assertThat(ret.getQuantity()).isEqualTo(99L);
+		assertThat(ret.getQuantity()).isEqualTo(99L);
 	}
 
 	@Test
@@ -64,8 +66,7 @@ class StockServiceTest {
 		Stock stock = stockRepository.findById(savedStock.getId()).orElseThrow();
 
 		System.out.println("stock.getQuantity() = " + stock.getQuantity());
-		Assertions.assertThat(stock.getQuantity())
-			.isNotEqualTo(0L);
+		assertThat(stock.getQuantity()).isNotEqualTo(0L);
 	}
 
 	/*
@@ -88,7 +89,7 @@ class StockServiceTest {
 		for (int i = 0; i < threadCount; i++) {
 			executorService.submit(() -> {
 				try {
-					stockService.synchronizedDecrease(1L, 1L);
+					stockService.decreaseWithSynchronized(1L, 1L);
 				} finally {
 					latch.countDown();
 				}
@@ -99,7 +100,32 @@ class StockServiceTest {
 		Stock stock = stockRepository.findById(savedStock.getId()).orElseThrow();
 
 		System.out.println("stock.getQuantity() = " + stock.getQuantity());
-		Assertions.assertThat(stock.getQuantity())
-			.isNotEqualTo(0L);
+		assertThat(stock.getQuantity()).isNotEqualTo(0L);
+	}
+
+	/*
+		database의 pessimistic lock을 이용
+	 */
+	@Test
+	void 동시에_100개의_요청_decrease메소드_pessimisticLock() throws Exception {
+		int threadCount = 100;
+		ExecutorService executorService = Executors.newFixedThreadPool(32);
+		CountDownLatch latch = new CountDownLatch(threadCount);
+
+		for (int i = 0; i < threadCount; i++) {
+			executorService.submit(() -> {
+				try {
+					stockService.decreaseWithPessimisticLock(savedStock.getId(), 1L);
+				} finally {
+					latch.countDown();
+				}
+			});
+		}
+		latch.await();
+
+		Stock stock = stockRepository.findById(savedStock.getId()).orElseThrow();
+
+		System.out.println("stock.getQuantity() = " + stock.getQuantity());
+		assertThat(stock.getQuantity()).isEqualTo(0L);
 	}
 }
