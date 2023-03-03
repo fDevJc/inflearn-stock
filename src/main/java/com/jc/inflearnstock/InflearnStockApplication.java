@@ -1,13 +1,13 @@
-package com.jc.infleanstock;
+package com.jc.inflearnstock;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class InfleanStockApplication {
+public class InflearnStockApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(InfleanStockApplication.class, args);
+		SpringApplication.run(InflearnStockApplication.class, args);
 	}
 
 }
