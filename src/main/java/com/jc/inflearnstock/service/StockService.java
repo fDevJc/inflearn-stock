@@ -1,8 +1,8 @@
 package com.jc.inflearnstock.service;
 
-import javax.transaction.Transactional;
-
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.jc.inflearnstock.domain.Stock;
 import com.jc.inflearnstock.repository.StockRepository;
@@ -26,7 +26,7 @@ public class StockService {
 		stockRepository.saveAndFlush(stock);
 	}
 
-	@Transactional
+	@Transactional(propagation = Propagation.REQUIRES_NEW)
 	public void decrease(Long id, Long quantity) {
 		//재고 조회
 		Stock stock = stockRepository.findById(id)
